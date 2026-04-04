@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowUpRight, ArrowDownLeft,
-  Pause, Play, X, RefreshCw, PlusCircle, MapPin, Clock,
+  Pause, Play, X, RefreshCw, PlusCircle, MapPin, Clock, Share2,
 } from "lucide-react";
 import { DrippayLogo } from "@/components/ui/logo";
 import { formatUsdc, timeRemaining, streamProgress, STATUS_LABELS, STATUS_COLORS } from "@/lib/utils";
@@ -114,6 +114,18 @@ function StreamCard({ stream, onAction }: { stream: StreamData; onAction: () => 
               <Play className="w-3 h-3" /> Resume
             </button>
           )}
+          <button
+            onClick={() => {
+              const url = `${window.location.origin}/stream/${stream.id}`;
+              navigator.clipboard.writeText(url).then(() => {
+                toast.success("Stream link copied!");
+              });
+            }}
+            className="px-3 py-2 text-xs rounded-lg bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 transition-colors flex items-center gap-1"
+            title="Copy stream link"
+          >
+            <Share2 className="w-3 h-3" />
+          </button>
           <a href={`/stream/${stream.id}`} className="px-3 py-2 text-xs rounded-lg bg-white/5 text-gray-400 border border-white/10 hover:bg-white/10 transition-colors ml-auto">
             Details →
           </a>

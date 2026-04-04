@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, XCircle, LinkIcon, ImageIcon, Bot } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, LinkIcon, ImageIcon } from "lucide-react";
 import { BACKEND_URL } from "@/lib/wagmi";
 
 interface ProofSubmissionProps {
@@ -36,7 +36,6 @@ export function ProofSubmission({ streamId, isReceiver, isSender, streamStatus, 
   const [proofNote, setProofNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [senderNote, setSenderNote] = useState("");
-  const [aiVerifying, setAiVerifying] = useState(false);
   const [rejected, setRejected] = useState(false);
 
   async function fetchData() {
@@ -211,27 +210,7 @@ export function ProofSubmission({ streamId, isReceiver, isSender, streamStatus, 
             {proof.proofNote && <p className="text-gray-400 text-xs mt-2">"{proof.proofNote}"</p>}
           </div>
 
-          {proof.aiVerdict && (
-            <div className={`p-3 rounded-xl border text-sm ${proof.aiVerdict.verdict === "APPROVE" ? "bg-white/5 border-white/10" : "bg-red-500/5 border-red-500/20"}`}>
-              <div className="flex items-center gap-2 mb-1">
-                <Bot className="w-3.5 h-3.5 text-gray-400" />
-                <span className="font-medium text-xs text-white">AI Verdict: {proof.aiVerdict.verdict}</span>
-                <span className="text-xs text-gray-500">({proof.aiVerdict.confidence} confidence)</span>
-              </div>
-              <p className="text-xs text-gray-400">{proof.aiVerdict.reason}</p>
-            </div>
-          )}
 
-          {!proof.aiVerdict && (
-            <button
-              onClick={runAiVerification}
-              disabled={aiVerifying}
-              className="w-full py-2.5 rounded-xl bg-white/5 border border-white/10 text-gray-300 text-sm font-medium hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
-            >
-              {aiVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
-              {aiVerifying ? "AI reviewing…" : "Ask AI to review"}
-            </button>
-          )}
 
           <textarea
             value={senderNote}

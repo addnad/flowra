@@ -38,6 +38,7 @@ export function Navbar() {
     { label: "Dashboard", href: "/dashboard" },
     { label: "Send",      href: "/create"    },
     { label: "How it Works", href: "/#how"  },
+    { label: "Analytics",    href: "/analytics" },
   ];
 
   return (

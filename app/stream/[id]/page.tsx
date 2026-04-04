@@ -8,10 +8,11 @@ import { toast } from "sonner";
 import { Navbar } from "@/components/ui/navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, Clock, Pause, Play, X, CheckCircle2, XCircle, Loader2, ArrowLeft, Droplets, RefreshCw, Navigation } from "lucide-react";
+import { MapPin, Clock, Pause, Play, X, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCw, Share2, Navigation } from "lucide-react";
 import { formatUsdc, timeRemaining, streamProgress, STATUS_LABELS, STATUS_COLORS } from "@/lib/utils";
 import { DRIPLY_ABI } from "@/lib/abi";
 import { DRIPLY_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
+import { DrippayLogo } from "@/components/ui/logo";
 import { ProofSubmission } from "@/components/ui/proof-submission";
 
 interface StreamData {
@@ -217,9 +218,22 @@ export default function StreamDetailPage() {
             </div>
             <span className={`text-sm font-medium ${STATUS_COLORS[stream.status]}`}>{STATUS_LABELS[stream.status]}</span>
           </div>
-          <button onClick={fetchStream} className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors">
-            <RefreshCw className="w-4 h-4" />
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                const url = `${window.location.origin}/stream/${id}`;
+                navigator.clipboard.writeText(url);
+                toast.success("Stream link copied to clipboard!");
+              }}
+              className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors"
+              title="Copy share link"
+            >
+              <Share2 className="w-4 h-4" />
+            </button>
+            <button onClick={fetchStream} className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors">
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <Card className="bg-[#0d0d0d] border border-white/10 mb-4 rounded-2xl">
