@@ -164,15 +164,15 @@ export function ProofSubmission({ streamId, isReceiver, isSender, streamStatus, 
       {isReceiver && proof?.status === "pending" && (
         <div className="text-center py-4">
           <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse mx-auto mb-3" />
-          <p className="text-yellow-400 text-sm font-medium">Proof submitted — awaiting sender review</p>
-          <p className="text-gray-500 text-xs mt-1 break-all">{proof.proofContent}</p>
+          <p className="text-yellow-400 text-sm font-medium">Flowra is reviewing your submission…</p>
+          <p className="text-gray-500 text-xs mt-2">Flowra will verify this against the sender's instructions automatically.</p>
         </div>
       )}
 
       {isReceiver && proof?.status === "approved" && (
         <div className="text-center py-4">
           <CheckCircle2 className="w-8 h-8 text-white mx-auto mb-3" />
-          <p className="text-white text-sm font-medium">Proof approved — funds released</p>
+          <p className="text-white text-sm font-medium">Flowra approved your proof. Funds released.</p>
           {proof.senderNote && <p className="text-gray-500 text-xs mt-2">"{proof.senderNote}"</p>}
         </div>
       )}
@@ -181,7 +181,7 @@ export function ProofSubmission({ streamId, isReceiver, isSender, streamStatus, 
         <div className="space-y-3">
           <div className="text-center py-2">
             <XCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
-            <p className="text-red-400 text-sm font-medium">Proof rejected</p>
+            <p className="text-red-400 text-sm font-medium">Flowra rejected this proof.</p>
             {proof.senderNote && <p className="text-gray-500 text-xs mt-2">"{proof.senderNote}"</p>}
           </div>
           <button
