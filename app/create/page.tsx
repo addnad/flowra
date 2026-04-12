@@ -290,8 +290,25 @@ export default function CreateStreamPage() {
           </div>
         </div>
 
-        <Card className="bg-[#0d0d0d] border-white/10 rounded-2xl">
-          <CardContent className="p-8 space-y-8">
+        <div className="border border-blue-500/20 rounded-2xl overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/60 to-black/80 pointer-events-none"/>
+          <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 800 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="30" y="120" width="22" height="180" rx="5" fill="#3b82f6" opacity="0.3"/>
+            <rect x="62" y="90" width="22" height="210" rx="5" fill="#3b82f6" opacity="0.4"/>
+            <rect x="94" y="60" width="22" height="240" rx="5" fill="#3b82f6" opacity="0.5"/>
+            <rect x="126" y="80" width="22" height="220" rx="5" fill="#3b82f6" opacity="0.4"/>
+            <rect x="158" y="40" width="22" height="260" rx="5" fill="#3b82f6" opacity="0.6"/>
+            <path d="M580 480 L630 360 L670 410 L720 300 L760 340" stroke="#3b82f6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="630" cy="360" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="720" cy="300" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="760" cy="340" r="5" fill="#3b82f6" opacity="0.8"/>
+            <circle cx="700" cy="150" r="80" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 8" opacity="0.3"/>
+            <circle cx="700" cy="150" r="50" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 4" opacity="0.4"/>
+            <circle cx="700" cy="150" r="8" fill="#3b82f6" opacity="0.6"/>
+            <path d="M200 300 Q350 200 500 300 Q650 400 800 300" stroke="#3b82f6" strokeWidth="1" fill="none" opacity="0.2"/>
+            <path d="M200 330 Q350 230 500 330 Q650 430 800 330" stroke="#3b82f6" strokeWidth="0.5" fill="none" opacity="0.15"/>
+          </svg>
+          <div className="p-8 space-y-8 relative">
 
             <div>
               <Label>Receiver wallet address</Label>
@@ -372,8 +389,8 @@ export default function CreateStreamPage() {
               </button>
             )}
 
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
