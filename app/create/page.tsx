@@ -99,7 +99,8 @@ export default function CreateStreamPage() {
     try {
       const receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
       // StreamCreated event — streamId is the first indexed topic (topics[1])
-      const log = receipt?.logs?.find(l => l.topics?.length >= 2);
+      const STREAM_CREATED_TOPIC = "0xa8b65715cb7f20e6736c0c2219f0fdea26e05b6a2d2297ecab23c6cb243daf34";
+      const log = receipt?.logs?.find(l => l.topics?.[0]?.toLowerCase() === STREAM_CREATED_TOPIC);
       const streamId = log?.topics?.[1] ? BigInt(log.topics[1]).toString() : "0";
 
       // Save stream meta if proof condition
