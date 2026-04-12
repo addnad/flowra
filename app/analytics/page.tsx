@@ -7,7 +7,7 @@ import { FlowraLogo } from "@/components/ui/logo";
 import { RefreshCw, TrendingUp, Droplets, Users, Zap } from "lucide-react";
 import { formatUsdc } from "@/lib/utils";
 import { DRIPLY_ABI } from "@/lib/abi";
-import { DRIPLY_CONTRACT_ADDRESS } from "@/lib/wagmi";
+import { DRIPLY_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
 
 export default function AnalyticsPage() {
   const { address, isConnected } = useAccount();
@@ -27,38 +27,12 @@ export default function AnalyticsPage() {
     if (!address || !publicClient) return;
     setLoading(true);
     try {
-      const latestBlock = await publicClient.getBlockNumber();
-      const CHUNK = 9000n;
-      const START_BLOCK = 34997075n;
-      const allLogs: any[] = [];
+      // Use registry for instant load — no chain scanning
+      const regRes = await fetch(`${BACKEND_URL}/api/registry/${address}`);
+      const regData = await regRes.json();
+      const streamIds: string[] = regData.streamIds || [];
 
-      for (let from = START_BLOCK; from <= latestBlock; from += CHUNK) {
-        const to = from + CHUNK - 1n < latestBlock ? from + CHUNK - 1n : latestBlock;
-        const eventAbi = {
-          name: "StreamCreated", type: "event" as const,
-          inputs: [
-            { name: "streamId", type: "uint256", indexed: true },
-            { name: "sender", type: "address", indexed: true },
-            { name: "receiver", type: "address", indexed: true },
-            { name: "totalAmount", type: "uint256", indexed: false },
-            { name: "startTime", type: "uint256", indexed: false },
-            { name: "endTime", type: "uint256", indexed: false },
-            { name: "conditionType", type: "uint8", indexed: false },
-          ],
-        };
-        const [sentLogs, receivedLogs] = await Promise.all([
-          publicClient.getLogs({ address: DRIPLY_CONTRACT_ADDRESS, event: eventAbi, args: { sender: address as `0x${string}` }, fromBlock: from, toBlock: to }),
-          publicClient.getLogs({ address: DRIPLY_CONTRACT_ADDRESS, event: eventAbi, args: { receiver: address as `0x${string}` }, fromBlock: from, toBlock: to }),
-        ]);
-        allLogs.push(...sentLogs.map(l => ({ ...l, direction: "sent" })), ...receivedLogs.map(l => ({ ...l, direction: "received" })));
-      }
-
-      const seen = new Set<string>();
-      const unique = allLogs.filter(l => {
-        const id = (l.args?.streamId ?? "").toString();
-        if (seen.has(id)) return false;
-        seen.add(id); return true;
-      });
+      const unique = streamIds.map(id => ({ args: { streamId: BigInt(id) }, direction: "sent" }));
 
       let totalStreamed = 0n;
       let totalClaimed = 0n;
@@ -126,17 +100,34 @@ export default function AnalyticsPage() {
             { label: "Total claimed",  value: formatUsdc(stats.totalClaimed),  Icon: Zap       },
             { label: "Active",         value: stats.activeStreams.toString(),  Icon: Users     },
           ].map(s => (
-            <div key={s.label} className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-5">
-              <s.Icon className="w-4 h-4 text-gray-500 mb-3" />
-              <p className="text-2xl font-bold text-white">{s.value}</p>
-              <p className="text-gray-500 text-xs mt-1">{s.label}</p>
+            <div key={s.label} className="border border-blue-500/20 rounded-2xl p-5 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-950/60 to-black/80 pointer-events-none"/>
+              <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 200 120" fill="none">
+                <path d="M20 90 Q60 50 100 70 Q140 90 180 40" stroke="#3b82f6" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                <circle cx="100" cy="70" r="3" fill="#3b82f6" opacity="0.8"/>
+                <circle cx="180" cy="40" r="3" fill="#3b82f6" opacity="0.8"/>
+                <circle cx="160" cy="30" r="25" stroke="#3b82f6" strokeWidth="0.5" strokeDasharray="3 5" opacity="0.4"/>
+              </svg>
+              <s.Icon className="relative w-4 h-4 text-blue-400 mb-3" />
+              <p className="relative text-2xl font-bold text-white">{s.value}</p>
+              <p className="relative text-gray-500 text-xs mt-1">{s.label}</p>
             </div>
           ))}
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-500 text-xs uppercase tracking-wider mb-4">Stream breakdown</p>
+          <div className="border border-violet-500/20 rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-violet-950/60 to-black/80 pointer-events-none"/>
+            <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 400 220" fill="none">
+              <rect x="40" y="60" width="28" height="120" rx="5" fill="#a855f7" opacity="0.3"/>
+              <rect x="80" y="40" width="28" height="140" rx="5" fill="#a855f7" opacity="0.4"/>
+              <rect x="120" y="80" width="28" height="100" rx="5" fill="#a855f7" opacity="0.5"/>
+              <rect x="160" y="50" width="28" height="130" rx="5" fill="#a855f7" opacity="0.4"/>
+              <circle cx="320" cy="110" r="70" stroke="#a855f7" strokeWidth="1" strokeDasharray="4 8" opacity="0.3"/>
+              <circle cx="320" cy="110" r="40" stroke="#a855f7" strokeWidth="1" opacity="0.4"/>
+              <circle cx="320" cy="110" r="6" fill="#a855f7" opacity="0.6"/>
+            </svg>
+            <p className="relative text-gray-500 text-xs uppercase tracking-wider mb-4">Stream breakdown</p>
             <div className="space-y-3">
               {[
                 { label: "Sent",      value: stats.sentStreams      },
@@ -145,15 +136,24 @@ export default function AnalyticsPage() {
                 { label: "Completed", value: stats.completedStreams },
               ].map(r => (
                 <div key={r.label} className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">{r.label}</span>
-                  <span className="text-white text-sm font-medium">{r.value}</span>
+                  <span className="relative text-gray-400 text-sm">{r.label}</span>
+                  <span className="relative text-white text-sm font-medium">{r.value}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-500 text-xs uppercase tracking-wider mb-4">Flow summary</p>
+          <div className="border border-green-500/20 rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-green-950/60 to-black/80 pointer-events-none"/>
+            <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" viewBox="0 0 400 220" fill="none">
+              <path d="M20 180 Q80 120 140 150 Q200 180 260 100 Q320 20 380 60" stroke="#10b981" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              <circle cx="140" cy="150" r="4" fill="#10b981"/>
+              <circle cx="260" cy="100" r="4" fill="#10b981"/>
+              <circle cx="380" cy="60" r="4" fill="#10b981"/>
+              <path d="M20 180 Q80 120 140 150 Q200 180 260 100 Q320 20 380 60 L380 220 L20 220 Z" fill="#10b981" opacity="0.08"/>
+              <line x1="20" y1="220" x2="380" y2="220" stroke="#10b981" strokeWidth="0.5" opacity="0.3"/>
+            </svg>
+            <p className="relative text-gray-500 text-xs uppercase tracking-wider mb-4">Flow summary</p>
             <div className="space-y-3">
               {[
                 { label: "Still locked",   value: formatUsdc(stats.totalStreamed - stats.totalClaimed) },
@@ -161,8 +161,8 @@ export default function AnalyticsPage() {
                 { label: "Completion",     value: stats.totalStreamed > 0n ? `${Math.round(Number(stats.totalClaimed * 100n / stats.totalStreamed))}%` : "0%" },
               ].map(r => (
                 <div key={r.label} className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">{r.label}</span>
-                  <span className="text-white text-sm font-medium">{r.value}</span>
+                  <span className="relative text-gray-400 text-sm">{r.label}</span>
+                  <span className="relative text-white text-sm font-medium">{r.value}</span>
                 </div>
               ))}
             </div>
