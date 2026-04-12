@@ -12,7 +12,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Flowra — Programmable Payments",
+  title: "Flowra — Programmable Payment Agent",
   description: "Stream USDC over time with smart conditions. Powered by Arc Network.",
   icons: {
     icon: "/icon.svg",

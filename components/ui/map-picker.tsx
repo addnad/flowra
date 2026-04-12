@@ -18,7 +18,7 @@ function SearchBox({ onPlaceSelect }: { onPlaceSelect: (lat: number, lon: number
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(false);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   async function handleChange(value: string) {
     setQuery(value);

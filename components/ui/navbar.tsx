@@ -16,7 +16,7 @@ const AnimatedNavLink = ({ href, children }: { href: string; children: React.Rea
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [headerShapeClass, setHeaderShapeClass] = useState("rounded-full");
-  const shapeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const shapeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { address, isConnected } = useAccount();
   const { connect, connectors } = useConnect();

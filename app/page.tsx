@@ -168,7 +168,7 @@ export default function HomePage() {
                 </svg>
                 <div className="absolute inset-0 bg-gradient-to-b from-purple-950/60 to-black/80"/>
               </div>
-            } Icon={Shield} description="Funds sit in the smart contract, never in our hands. Your wallet, your rules." href="/" cta="Learn more" />
+            } Icon={Shield} description="Funds sit in the smart contract, never in our hands. Your wallet, your rules." href="/#how-it-works" cta="Learn more" />
 
             <BentoCard name="Instant Claims" className="lg:col-start-3 lg:col-end-3 lg:row-start-2 lg:row-end-3" background={
               <div className="absolute inset-0 overflow-hidden border border-white/10">
@@ -197,7 +197,7 @@ export default function HomePage() {
         </div>
       </section>
       {/* How Flowra Works */}
-      <section className="py-24 bg-black">
+      <section id="how-it-works" className="py-24 bg-black">
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white">How Flowra Works</h2>

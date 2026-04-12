@@ -42,8 +42,38 @@ function StreamCard({ stream, onAction }: { stream: StreamData; onAction: () => 
   }, [txHash, isConfirming]);
 
   return (
-    <Card className="bg-[#0d0d0d] border border-white/10 hover:border-white/20 transition-colors rounded-2xl">
-      <CardContent className="p-6">
+    <Card className="bg-[#0d0d0d] border border-white/10 hover:border-white/20 transition-colors rounded-2xl overflow-hidden relative">
+      {/* SVG background — sent streams get blue flow lines, received get green */}
+      <div className="absolute inset-0 pointer-events-none">
+        {stream.direction === "sent" ? (
+          <>
+            <svg className="absolute inset-0 w-full h-full opacity-[0.07]" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0 100 Q100 60 200 100 Q300 140 400 100" stroke="#3b82f6" strokeWidth="1.5" fill="none"/>
+              <path d="M0 120 Q100 80 200 120 Q300 160 400 120" stroke="#3b82f6" strokeWidth="1" fill="none" opacity="0.5"/>
+              <path d="M0 80 Q100 40 200 80 Q300 120 400 80" stroke="#3b82f6" strokeWidth="1" fill="none" opacity="0.5"/>
+              <circle cx="200" cy="100" r="4" fill="#3b82f6"/>
+              <circle cx="100" cy="80" r="2" fill="#3b82f6" opacity="0.6"/>
+              <circle cx="300" cy="120" r="2" fill="#3b82f6" opacity="0.6"/>
+            </svg>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 to-black/90"/>
+          </>
+        ) : (
+          <>
+            <svg className="absolute inset-0 w-full h-full opacity-[0.07]" viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="30" y="60" width="18" height="80" rx="4" fill="#10b981" opacity="0.5"/>
+              <rect x="60" y="40" width="18" height="100" rx="4" fill="#10b981" opacity="0.6"/>
+              <rect x="90" y="70" width="18" height="70" rx="4" fill="#10b981" opacity="0.4"/>
+              <rect x="120" y="50" width="18" height="90" rx="4" fill="#10b981" opacity="0.7"/>
+              <rect x="150" y="30" width="18" height="110" rx="4" fill="#10b981" opacity="0.9"/>
+              <path d="M220 150 L260 80 L300 110 L340 50 L380 70" stroke="#10b981" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+              <circle cx="260" cy="80" r="3" fill="#10b981"/>
+              <circle cx="340" cy="50" r="3" fill="#10b981"/>
+            </svg>
+            <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 to-black/90"/>
+          </>
+        )}
+      </div>
+      <CardContent className="p-6 relative">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${stream.direction === "sent" ? "bg-blue-500/20 text-blue-400" : "bg-green-500/20 text-green-400"}`}>
@@ -147,8 +177,8 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const latestBlock = await publicClient.getBlockNumber();
-      const CHUNK = 9000n;
-      const START_BLOCK = 34997075n;
+      const CHUNK = 9999n;
+      const START_BLOCK = 35141291n;
       const allLogs: any[] = [];
 
       for (let from = START_BLOCK; from <= latestBlock; from += CHUNK) {
@@ -235,17 +265,44 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-xs mb-2">Total streams</p>
-            <p className="text-white text-2xl font-bold">{streams.length}</p>
+          {/* Total streams stat */}
+          <div className="border border-white/10 rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 to-black/90 pointer-events-none"/>
+            <svg className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none" viewBox="0 0 200 100" fill="none">
+              <circle cx="160" cy="50" r="40" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 4"/>
+              <circle cx="160" cy="50" r="25" stroke="#3b82f6" strokeWidth="1"/>
+              <circle cx="160" cy="50" r="4" fill="#3b82f6"/>
+              <line x1="10" y1="30" x2="80" y2="30" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="10" y1="50" x2="70" y2="50" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="10" y1="70" x2="75" y2="70" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <p className="relative text-gray-400 text-xs mb-2">Total streams</p>
+            <p className="relative text-white text-2xl font-bold">{streams.length}</p>
           </div>
-          <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-xs mb-2">Ready to claim</p>
-            <p className="text-white text-2xl font-bold">{formatUsdc(totalClaimable)}</p>
+          {/* Ready to claim stat */}
+          <div className="border border-white/10 rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-950/40 to-black/90 pointer-events-none"/>
+            <svg className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none" viewBox="0 0 200 100" fill="none">
+              <polygon points="140,15 115,65 135,65 120,90 165,45 142,45" fill="#eab308" opacity="0.8"/>
+              <circle cx="140" cy="50" r="40" stroke="#eab308" strokeWidth="0.5" strokeDasharray="3 5"/>
+              <line x1="10" y1="40" x2="70" y2="40" stroke="#eab308" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="10" y1="55" x2="60" y2="55" stroke="#eab308" strokeWidth="1.5" strokeLinecap="round"/>
+              <line x1="10" y1="70" x2="65" y2="70" stroke="#eab308" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            <p className="relative text-gray-400 text-xs mb-2">Ready to claim</p>
+            <p className="relative text-white text-2xl font-bold">{formatUsdc(totalClaimable)}</p>
           </div>
-          <div className="bg-[#0d0d0d] border border-white/10 rounded-2xl p-5">
-            <p className="text-gray-400 text-xs mb-2">Active streams</p>
-            <p className="text-green-400 text-2xl font-bold">{streams.filter(s => s.status === 0).length}</p>
+          {/* Active streams stat */}
+          <div className="border border-white/10 rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-950/40 to-black/90 pointer-events-none"/>
+            <svg className="absolute inset-0 w-full h-full opacity-[0.07] pointer-events-none" viewBox="0 0 200 100" fill="none">
+              <path d="M100 15 L170 40 L170 70 C170 88 100 95 100 95 C100 95 30 88 30 70 L30 40 Z" stroke="#10b981" strokeWidth="1.5" fill="#10b981" fillOpacity="0.15"/>
+              <rect x="82" y="50" width="36" height="28" rx="4" fill="#10b981" opacity="0.5"/>
+              <path d="M88 50 L88 43 C88 35 112 35 112 43 L112 50" stroke="#10b981" strokeWidth="2" fill="none" strokeLinecap="round"/>
+              <circle cx="100" cy="64" r="4" fill="white" opacity="0.6"/>
+            </svg>
+            <p className="relative text-gray-400 text-xs mb-2">Active streams</p>
+            <p className="relative text-green-400 text-2xl font-bold">{streams.filter(s => s.status === 0).length}</p>
           </div>
         </div>
 

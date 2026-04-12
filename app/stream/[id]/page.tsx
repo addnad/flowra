@@ -14,6 +14,8 @@ import { DRIPLY_ABI } from "@/lib/abi";
 import { DRIPLY_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
 import { FlowraLogo } from "@/components/ui/logo";
 import { ProofSubmission } from "@/components/ui/proof-submission";
+import { PresenceTimer } from "@/components/ui/presence-timer";
+import { StepProgress } from "@/components/ui/step-progress";
 
 interface StreamData {
   id: bigint;
@@ -60,10 +62,13 @@ export default function StreamDetailPage() {
     message: string;
     timestamp: number;
     receiverAddress: string;
+    percentage?: number;
   } | null>(null);
   const [unlockMessage, setUnlockMessage] = useState("");
   const [unlockPercentage, setUnlockPercentage] = useState(10);
   const [submittingUnlock, setSubmittingUnlock] = useState(false);
+  const [presenceStatus, setPresenceStatus] = useState<{ timeInZoneMs: number; requiredDurationMs: number; remainingMs: number; met: boolean } | null>(null);
+  const [stepData, setStepData] = useState<{ id: string; status: string; completedAt: number | null }[] | null>(null);
 
   async function fetchUnlockRequest() {
     try {
@@ -156,10 +161,12 @@ export default function StreamDetailPage() {
       const res = await fetch(`${BACKEND_URL}/api/verify-location`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ streamId: id, receiverAddress: address, userLat: geo.coords.latitude, userLon: geo.coords.longitude, allowedLat: locationInfo.lat, allowedLon: locationInfo.lon, radiusMeters: locationInfo.radius }),
+        body: JSON.stringify({ streamId: id, receiverAddress: address, userLat: geo.coords.latitude, userLon: geo.coords.longitude, allowedLat: locationInfo.lat, allowedLon: locationInfo.lon, radiusMeters: locationInfo.radius, requiredDurationMs: (locationInfo as any).requiredDurationMs || 0 }),
       });
       const data = await res.json();
       setLocationVerif({ allowed: data.allowed, distanceMeters: data.distanceMeters, signature: data.signature, message: data.message, checking: false });
+      if (data.presenceStatus) setPresenceStatus(data.presenceStatus);
+      if (data.steps) setStepData(data.steps);
       if (data.allowed) { toast.success("Flowra verified your location. Funds can now be released."); }
       else { toast.error(data.message || "Flowra couldn't verify your location. Move closer to the required area."); }
     } catch (err) {
@@ -236,8 +243,22 @@ export default function StreamDetailPage() {
           </div>
         </div>
 
-        <Card className="bg-[#0d0d0d] border border-white/10 mb-4 rounded-2xl">
-          <CardContent className="p-6">
+        <div className="border border-blue-500/20 mb-4 rounded-2xl overflow-hidden relative">
+      <div className="absolute inset-0 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 600 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="40" y="80" width="28" height="120" rx="6" fill="#3b82f6" opacity="0.3"/>
+          <rect x="80" y="60" width="28" height="140" rx="6" fill="#3b82f6" opacity="0.4"/>
+          <rect x="120" y="40" width="28" height="160" rx="6" fill="#3b82f6" opacity="0.5"/>
+          <rect x="160" y="55" width="28" height="145" rx="6" fill="#3b82f6" opacity="0.4"/>
+          <rect x="200" y="30" width="28" height="170" rx="6" fill="#3b82f6" opacity="0.6"/>
+          <path d="M320 240 L370 140 L420 180 L470 100 L520 130 L560 80" stroke="#3b82f6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+          <circle cx="370" cy="140" r="5" fill="#3b82f6"/>
+          <circle cx="470" cy="100" r="5" fill="#3b82f6"/>
+          <circle cx="560" cy="80" r="5" fill="#3b82f6"/>
+        </svg>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/70 to-black/90"/>
+      </div>
+          <div className="p-6 relative">
             <div className="grid grid-cols-3 gap-4 mb-6">
               <div className="text-center"><p className="text-gray-500 text-xs mb-1">Total</p><p className="text-white text-xl font-bold">{formatUsdc(stream.totalAmount)}</p></div>
               <div className="text-center"><p className="text-gray-500 text-xs mb-1">Claimed</p><p className="text-white text-xl font-bold">{formatUsdc(stream.amountClaimed)}</p></div>
@@ -259,18 +280,33 @@ export default function StreamDetailPage() {
               <div className="flex justify-between"><span className="text-gray-500">Condition</span><span className={stream.conditionType === 1 ? "text-violet-400" : "text-gray-400"}>{stream.conditionType === 1 ? "📍 Location-gated" : "None"}</span></div>
             </div>
 
-            {isReceiver && stream.status === 0 && (
+            {stepData && stepData.length > 0 && <StepProgress steps={stepData as any} />}
+
+        {isReceiver && stream.status === 0 && (
               <div className="p-4 bg-white/5 border border-white/10 rounded-xl text-center">
                 <p className="text-gray-400 text-xs mb-1">Available to claim now</p>
                 <p className="text-white text-3xl font-bold">{formatUsdc(claimable)}</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {isReceiver && stream.conditionType === 1 && stream.status === 0 && locationInfo && (
-          <Card className="bg-[#0d0d0d] border border-violet-500/20 mb-4 rounded-2xl">
-            <CardContent className="p-6">
+          <div className="border border-violet-500/20 mb-4 rounded-2xl overflow-hidden relative">
+      <div className="absolute inset-0 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 600 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="300" cy="125" r="180" stroke="#a855f7" strokeWidth="1" strokeDasharray="4 8"/>
+          <circle cx="300" cy="125" r="120" stroke="#a855f7" strokeWidth="1" strokeDasharray="4 8"/>
+          <circle cx="300" cy="125" r="60" stroke="#a855f7" strokeWidth="1"/>
+          <circle cx="300" cy="125" r="8" fill="#a855f7"/>
+          <line x1="300" y1="20" x2="300" y2="230" stroke="#a855f7" strokeWidth="0.5" strokeDasharray="4 8"/>
+          <line x1="80" y1="125" x2="520" y2="125" stroke="#a855f7" strokeWidth="0.5" strokeDasharray="4 8"/>
+          <path d="M300 85 C300 85 328 115 328 132 C328 149 315 160 300 160 C285 160 272 149 272 132 C272 115 300 85 300 85Z" fill="#a855f7" opacity="0.6"/>
+          <circle cx="300" cy="129" r="10" fill="white" opacity="0.7"/>
+        </svg>
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/70 to-black/90"/>
+      </div>
+            <div className="p-6 relative">
               <div className="flex items-center gap-2 mb-4">
                 <MapPin className="w-5 h-5 text-violet-400" />
                 <h2 className="text-white font-semibold">Location Verification</h2>
@@ -290,10 +326,13 @@ export default function StreamDetailPage() {
               )}
               <button onClick={verifyLocation} disabled={locationVerif.checking} className="w-full py-3 rounded-xl bg-violet-600/80 text-white text-sm font-medium hover:bg-violet-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                 {locationVerif.checking ? <><Loader2 className="w-4 h-4 animate-spin" /> Checking location…</> : <><Navigation className="w-4 h-4" /> Verify My Location</>}
+              {presenceStatus && <PresenceTimer timeInZoneMs={presenceStatus.timeInZoneMs} requiredDurationMs={presenceStatus.requiredDurationMs} />}
               </button>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
+
+        {stepData && stepData.length > 0 && <StepProgress steps={stepData as any} />}
 
         {isReceiver && stream.status === 0 && (
           <button onClick={handleClaim} disabled={isLoading || claimable === 0n || (stream.conditionType === 1 && !locationVerif.signature)} className="w-full py-4 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 text-white font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-40 flex items-center justify-center gap-2 mb-4">
@@ -314,8 +353,22 @@ export default function StreamDetailPage() {
         )}
 
         {isSender && (stream.status === 0 || stream.status === 1) && (
-          <Card className="bg-[#0d0d0d] border border-white/10 rounded-2xl">
-            <CardContent className="p-5">
+          <div className="border border-orange-500/20 rounded-2xl overflow-hidden relative">
+      <div className="absolute inset-0 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 600 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="60" y="35" width="70" height="70" rx="16" fill="#f97316" opacity="0.5"/>
+          <rect x="80" y="53" width="10" height="34" rx="3" fill="white"/>
+          <rect x="100" y="53" width="10" height="34" rx="3" fill="white"/>
+          <rect x="180" y="35" width="70" height="70" rx="16" fill="#f97316" opacity="0.3"/>
+          <polygon points="198,50 198,88 228,69" fill="white"/>
+          <rect x="300" y="35" width="70" height="70" rx="16" fill="#ef4444" opacity="0.4"/>
+          <line x1="318" y1="50" x2="352" y2="87" stroke="white" strokeWidth="5" strokeLinecap="round"/>
+          <line x1="352" y1="50" x2="318" y2="87" stroke="white" strokeWidth="5" strokeLinecap="round"/>
+          <path d="M430 100 Q480 40 540 70" stroke="#f97316" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.4"/>
+        </svg>
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-950/70 to-black/90"/>
+      </div>
+            <div className="p-5 relative">
               <p className="text-gray-500 text-xs uppercase tracking-wider mb-4">Sender controls</p>
               <div className="flex gap-3">
                 {stream.status === 0 && (
@@ -333,14 +386,25 @@ export default function StreamDetailPage() {
                 </button>
               </div>
               <p className="text-xs text-gray-600 mt-3 text-center">Cancelling sends unlocked funds to receiver and refunds you the rest.</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Emergency unlock request — sender view */}
         {isSender && unlockRequest && unlockRequest.status === "pending" && (
-          <Card className="bg-[#0d0d0d] border border-orange-500/20 mt-4 rounded-2xl">
-            <CardContent className="p-5">
+          <div className="border border-orange-500/20 mt-4 rounded-2xl overflow-hidden relative">
+      <div className="absolute inset-0 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="300,25 348,115 252,115" stroke="#f97316" strokeWidth="2" fill="#f97316" fillOpacity="0.15"/>
+          <line x1="300" y1="52" x2="300" y2="88" stroke="#f97316" strokeWidth="3" strokeLinecap="round"/>
+          <circle cx="300" cy="101" r="4" fill="#f97316"/>
+          <circle cx="300" cy="150" r="55" stroke="#f97316" strokeWidth="1" strokeDasharray="4 4" opacity="0.4"/>
+          <circle cx="300" cy="150" r="85" stroke="#f97316" strokeWidth="0.5" strokeDasharray="4 8" opacity="0.25"/>
+          <circle cx="300" cy="150" r="115" stroke="#f97316" strokeWidth="0.5" strokeDasharray="4 8" opacity="0.15"/>
+        </svg>
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-950/70 to-black/90"/>
+      </div>
+            <div className="p-5 relative">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
                 <p className="text-orange-400 text-sm font-semibold">Emergency Unlock Request</p>
@@ -357,14 +421,28 @@ export default function StreamDetailPage() {
                   Reject
                 </button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
         {/* Emergency unlock request — receiver view */}
+        {stepData && stepData.length > 0 && <StepProgress steps={stepData as any} />}
+
         {isReceiver && stream.status === 0 && (
-          <Card className="bg-[#0d0d0d] border border-white/10 mt-4 rounded-2xl">
-            <CardContent className="p-5">
+          <div className="border border-indigo-500/20 mt-4 rounded-2xl overflow-hidden relative">
+      <div className="absolute inset-0 pointer-events-none">
+        <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 600 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="480" cy="100" r="80" stroke="#6366f1" strokeWidth="1" strokeDasharray="4 8"/>
+          <circle cx="480" cy="100" r="50" stroke="#6366f1" strokeWidth="1" strokeDasharray="4 4"/>
+          <path d="M455 95 L455 80 C455 64 505 64 505 80 L505 95" stroke="#6366f1" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+          <rect x="448" y="95" width="64" height="50" rx="8" fill="#6366f1" opacity="0.4"/>
+          <circle cx="480" cy="120" r="7" fill="white" opacity="0.6"/>
+          <line x1="480" y1="127" x2="480" y2="136" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.6"/>
+          <path d="M80 60 Q160 100 240 60 Q320 20 400 60" stroke="#6366f1" strokeWidth="1" strokeDasharray="3 5" opacity="0.3"/>
+        </svg>
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/70 to-black/90"/>
+      </div>
+            <div className="p-5 relative">
               <p className="text-gray-500 text-xs uppercase tracking-wider mb-4">Emergency Unlock</p>
 
               {!unlockRequest && (
@@ -421,8 +499,8 @@ export default function StreamDetailPage() {
                   <p className="text-gray-500 text-xs mt-1">Funds will continue streaming as scheduled.</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
 
       </div>

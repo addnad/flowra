@@ -63,7 +63,7 @@ export default function CreateStreamPage() {
   const { writeContract, data: txHash, isPending, reset } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash: txHash });
 
-  const duration = durationPreset === 0 ? parseInt(customDuration || "0") : durationPreset;
+  const duration = durationPreset === 0 ? parseInt(customDuration || "0") * 86400 : durationPreset;
   const interval = intervalPreset === 0 ? parseInt(customInterval || "0") * 3600 : intervalPreset;
   let rawAmount = 0n;
   try { rawAmount = parseUsdc(amountUsd); } catch {}
@@ -98,15 +98,12 @@ export default function CreateStreamPage() {
   }, [isSuccess]);
 
   async function saveStreamMeta() {
-    if (!publicClient) return;
+    if (!publicClient || !txHash) return;
     try {
-      // Get the stream ID from the transaction receipt logs
       const receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
-      // StreamCreated event topic
-      const streamCreatedTopic = "0x" + Array.from(new TextEncoder().encode("StreamCreated(uint256,address,address,uint256,uint256,uint256,uint8)")).map(b => b.toString(16).padStart(2, "0")).join("");
-      const log = receipt?.logs?.[0];
-      // Stream ID is in the first indexed topic
-      const streamId = log?.topics?.[1] ? parseInt(log.topics[1], 16).toString() : "0";
+      // StreamCreated event — streamId is the first indexed topic (topics[1])
+      const log = receipt?.logs?.find(l => l.topics?.length >= 2);
+      const streamId = log?.topics?.[1] ? BigInt(log.topics[1]).toString() : "0";
 
       await fetch(`${BACKEND_URL}/api/stream-meta`, {
         method: "POST",
@@ -118,7 +115,7 @@ export default function CreateStreamPage() {
           proofInstructions,
         }),
       });
-      console.log("Stream meta saved for stream:", streamId);
+      console.log("Stream meta saved for stream ID:", streamId);
     } catch (e) { console.error("Failed to save stream meta:", e); }
   }
 
@@ -219,26 +216,77 @@ export default function CreateStreamPage() {
         <div className="mb-6">
           <p className="text-sm text-white font-medium mb-3">Quick templates</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {[
-              { label: "👶 Kid's Allowance", amount: "50", duration: 2592000, interval: 86400, note: "Daily pocket money for 30 days" },
-              { label: "💼 Freelance Pay",   amount: "500", duration: 604800, interval: 604800, note: "Weekly freelance payment" },
-              { label: "👷 Field Worker",    amount: "200", duration: 2592000, interval: 86400, note: "Daily field worker pay" },
-              { label: "🎓 Tuition Stream",  amount: "300", duration: 7776000, interval: 2592000, note: "Monthly tuition for 90 days" },
-            ].map(t => (
-              <button
-                key={t.label}
-                type="button"
-                onClick={() => {
-                  setAmountUsd(t.amount);
-                  setDurationPreset(t.duration);
-                  setIntervalPreset(t.interval);
-                }}
-                className="p-3 rounded-xl bg-white/5 border border-white/10 text-left hover:border-white/20 hover:bg-white/8 transition-all"
-              >
-                <p className="text-white text-xs font-medium">{t.label}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{t.note}</p>
-              </button>
-            ))}
+
+            {/* Kid's Allowance */}
+            <button type="button" onClick={() => { setAmountUsd("50"); setDurationPreset(2592000); setIntervalPreset(86400); }}
+              className="p-3 rounded-xl border border-pink-500/20 text-left transition-all relative overflow-hidden hover:border-pink-500/40 hover:scale-[1.02]">
+              <div className="absolute inset-0 bg-gradient-to-b from-pink-950/60 to-black/80" />
+              <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="80" cy="60" r="30" stroke="#ec4899" strokeWidth="1.5"/>
+                <circle cx="80" cy="60" r="4" fill="#ec4899"/>
+                <rect x="140" y="40" width="20" height="40" rx="4" fill="#ec4899" opacity="0.4"/>
+                <rect x="170" y="30" width="20" height="50" rx="4" fill="#ec4899" opacity="0.6"/>
+                <rect x="200" y="20" width="20" height="60" rx="4" fill="#ec4899" opacity="0.8"/>
+                <rect x="230" y="35" width="20" height="45" rx="4" fill="#ec4899" opacity="0.5"/>
+                <rect x="260" y="45" width="20" height="35" rx="4" fill="#ec4899" opacity="0.3"/>
+                <line x1="320" y1="30" x2="380" y2="30" stroke="#ec4899" strokeWidth="1" strokeDasharray="4 4"/>
+                <line x1="320" y1="50" x2="360" y2="50" stroke="#ec4899" strokeWidth="1" strokeDasharray="4 4"/>
+                <line x1="320" y1="70" x2="370" y2="70" stroke="#ec4899" strokeWidth="1" strokeDasharray="4 4"/>
+              </svg>
+              <p className="relative text-white text-xs font-medium">👶 Kid&apos;s Allowance</p>
+              <p className="relative text-pink-300/60 text-xs mt-0.5">Daily pocket money for 30 days</p>
+            </button>
+
+            {/* Freelance Pay */}
+            <button type="button" onClick={() => { setAmountUsd("500"); setDurationPreset(604800); setIntervalPreset(604800); }}
+              className="p-3 rounded-xl border border-blue-500/20 text-left transition-all relative overflow-hidden hover:border-blue-500/40 hover:scale-[1.02]">
+              <div className="absolute inset-0 bg-gradient-to-b from-blue-950/60 to-black/80" />
+              <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="40" y="30" width="80" height="60" rx="8" stroke="#3b82f6" strokeWidth="1.5" fill="#3b82f6" fillOpacity="0.1"/>
+                <line x1="55" y1="50" x2="105" y2="50" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="55" y1="63" x2="90" y2="63" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
+                <line x1="55" y1="75" x2="95" y2="75" stroke="#3b82f6" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M180 60 L230 60 M220 50 L230 60 L220 70" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="300" cy="60" r="35" stroke="#3b82f6" strokeWidth="1.5" fill="#3b82f6" fillOpacity="0.1"/>
+                <path d="M300 45 C293 45 287 51 287 58 C287 65 293 68 300 68 C307 68 313 71 313 78 C313 85 307 91 300 91 M300 40 L300 45 M300 91 L300 96" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <p className="relative text-white text-xs font-medium">💼 Freelance Pay</p>
+              <p className="relative text-blue-300/60 text-xs mt-0.5">Weekly freelance payment</p>
+            </button>
+
+            {/* Field Worker */}
+            <button type="button" onClick={() => { setAmountUsd("200"); setDurationPreset(2592000); setIntervalPreset(86400); }}
+              className="p-3 rounded-xl border border-orange-500/20 text-left transition-all relative overflow-hidden hover:border-orange-500/40 hover:scale-[1.02]">
+              <div className="absolute inset-0 bg-gradient-to-b from-orange-950/60 to-black/80" />
+              <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="200" cy="35" r="60" stroke="#f97316" strokeWidth="0.5" strokeDasharray="3 6" opacity="0.5"/>
+                <path d="M60 90 Q100 40 140 70 Q180 100 220 50 Q260 0 300 60 Q330 100 360 80" stroke="#f97316" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                <circle cx="140" cy="70" r="4" fill="#f97316" opacity="0.8"/>
+                <circle cx="220" cy="50" r="4" fill="#f97316" opacity="0.8"/>
+                <circle cx="300" cy="60" r="4" fill="#f97316" opacity="0.8"/>
+                <line x1="60" y1="100" x2="360" y2="100" stroke="#f97316" strokeWidth="1" opacity="0.3"/>
+              </svg>
+              <p className="relative text-white text-xs font-medium">👷 Field Worker</p>
+              <p className="relative text-orange-300/60 text-xs mt-0.5">Daily field worker pay</p>
+            </button>
+
+            {/* Tuition Stream */}
+            <button type="button" onClick={() => { setAmountUsd("300"); setDurationPreset(7776000); setIntervalPreset(2592000); }}
+              className="p-3 rounded-xl border border-green-500/20 text-left transition-all relative overflow-hidden hover:border-green-500/40 hover:scale-[1.02]">
+              <div className="absolute inset-0 bg-gradient-to-b from-green-950/60 to-black/80" />
+              <svg className="absolute inset-0 w-full h-full opacity-20" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M200 20 L320 55 L200 90 L80 55 Z" stroke="#10b981" strokeWidth="1.5" fill="#10b981" fillOpacity="0.1"/>
+                <path d="M320 55 L320 95" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M310 85 L320 95 L330 85" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="150" y="88" width="100" height="18" rx="4" fill="#10b981" opacity="0.3"/>
+                <line x1="160" y1="97" x2="240" y2="97" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round"/>
+                <circle cx="60" cy="55" r="15" stroke="#10b981" strokeWidth="1" strokeDasharray="3 3" opacity="0.5"/>
+                <circle cx="340" cy="55" r="15" stroke="#10b981" strokeWidth="1" strokeDasharray="3 3" opacity="0.5"/>
+              </svg>
+              <p className="relative text-white text-xs font-medium">🎓 Tuition Stream</p>
+              <p className="relative text-green-300/60 text-xs mt-0.5">Monthly tuition for 90 days</p>
+            </button>
+
           </div>
         </div>
 
@@ -264,7 +312,7 @@ export default function CreateStreamPage() {
               <Label>Stream duration</Label>
               <ToggleGroup options={DURATION_PRESETS.map(p => ({ label: p.label, value: p.value }))} value={durationPreset} onChange={setDurationPreset} />
               {durationPreset === 0 && (
-                <div className="mt-3"><FieldInput type="number" placeholder="Duration in seconds (e.g. 86400 = 1 day)" value={customDuration} onChange={e => setCustomDuration(e.target.value)} /></div>
+                <div className="mt-3"><FieldInput type="number" placeholder="Number of days (e.g. 7 = 1 week)" value={customDuration} onChange={e => setCustomDuration(e.target.value)} /></div>
               )}
             </div>
 
