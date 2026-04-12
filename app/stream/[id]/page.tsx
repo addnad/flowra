@@ -349,6 +349,7 @@ export default function StreamDetailPage() {
             isSender={!!isSender}
             streamStatus={stream.status}
             onApproved={fetchStream}
+            receiverAddress={stream.receiver}
           />
         )}
 

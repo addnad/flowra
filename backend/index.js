@@ -139,11 +139,17 @@ app.post("/api/proof-submit", async (req, res) => {
 
 async function triggerFlowraVerification(streamId) {
   const db = readDB(); const proof = db.proofSubmissions[streamId]; if (!proof) return;
+  // capture proofs require manual sender review — leave as pending
+  if (proof.proofType === "capture") {
+    proof.aiVerdict = null; proof.status = "pending"; proof.senderNote = "";
+    writeDB(db);
+    console.log("Flowra: capture proof for " + streamId + " awaiting sender review");
+    return;
+  }
   let reason = "Auto-approved";
   if (proof.proofType === "link" && proof.proofContent.includes("github.com")) reason = "Detected GitHub proof";
   else if (proof.proofType === "file" && proof.proofContent.endsWith(".zip")) reason = "Detected ZIP file proof";
   else if (proof.proofType === "text" && proof.proofContent.length > 0) reason = "Detected text proof";
-  else if (proof.proofType === "capture") reason = "Live capture verified";
   proof.aiVerdict = "approved"; proof.status = "reviewed"; proof.senderNote = reason;
   writeDB(db);
   console.log(`Flowra verdict for ${streamId}:`, proof.aiVerdict, "—", reason);
@@ -214,4 +220,23 @@ app.get("/api/registry/:address", (req, res) => {
   const db = readRegistry();
   const ids = db[req.params.address.toLowerCase()] || [];
   res.json({ streamIds: ids });
+});
+
+// ─── Stream meta (proof instructions) ────────────────────────────────────────
+const META_PATH = require("path").join(__dirname, "stream-meta.json");
+function readMeta() { if (!require("fs").existsSync(META_PATH)) return {}; return JSON.parse(require("fs").readFileSync(META_PATH, "utf8")); }
+function writeMeta(data) { require("fs").writeFileSync(META_PATH, JSON.stringify(data, null, 2)); }
+
+app.post("/api/stream-meta", (req, res) => {
+  const { streamId, conditionMode, proofType, proofInstructions } = req.body;
+  if (!streamId) return res.status(400).json({ error: "Missing streamId" });
+  const db = readMeta();
+  db[streamId] = { streamId, conditionMode, proofType, proofInstructions, timestamp: Date.now() };
+  writeMeta(db);
+  res.json({ success: true, meta: db[streamId] });
+});
+
+app.get("/api/stream-meta/:streamId", (req, res) => {
+  const db = readMeta();
+  res.json({ meta: db[req.params.streamId] || null });
 });

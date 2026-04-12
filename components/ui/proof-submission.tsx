@@ -10,6 +10,7 @@ interface ProofSubmissionProps {
   isSender: boolean;
   streamStatus: number;
   onApproved: () => void;
+  receiverAddress?: string;
 }
 interface ProofData {
   proofType: string; proofContent: string; proofNote: string;
@@ -20,7 +21,7 @@ interface ProofData {
 interface MetaData { proofType: string; proofInstructions: string; conditionMode: string; }
 type CaptureMode = "link" | "camera" | "gallery";
 
-export function ProofSubmission({ streamId, isReceiver, isSender, streamStatus, onApproved }: ProofSubmissionProps) {
+export function ProofSubmission({ streamId, isReceiver, isSender, streamStatus, onApproved, receiverAddress }: ProofSubmissionProps) {
   const [proof, setProof] = useState<ProofData | null>(null);
   const [meta, setMeta] = useState<MetaData | null>(null);
   const [proofContent, setProofContent] = useState("");
@@ -103,7 +104,7 @@ export function ProofSubmission({ streamId, isReceiver, isSender, streamStatus, 
     try {
       const res = await fetch(`${BACKEND_URL}/api/proof-submit`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ streamId, receiverAddress: "receiver", proofType: finalType, proofContent: finalContent, proofNote, capturedAt, captureLocation }),
+        body: JSON.stringify({ streamId, receiverAddress: receiverAddress || "receiver", proofType: finalType, proofContent: finalContent, proofNote, capturedAt, captureLocation }),
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || "Proof rejected."); return; }
