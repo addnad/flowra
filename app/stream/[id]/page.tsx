@@ -50,6 +50,7 @@ export default function StreamDetailPage() {
   const [stream, setStream] = useState<StreamData | null>(null);
   const [claimable, setClaimable] = useState<bigint>(0n);
   const [loading, setLoading] = useState(true);
+  const [streamMeta, setStreamMeta] = useState<{ conditionMode: string; proofType: string; proofInstructions: string } | null>(null);
   const [locationInfo, setLocationInfo] = useState<{ lat: number; lon: number; radius: number } | null>(null);
   const [locationVerif, setLocationVerif] = useState({ allowed: null as boolean | null, distanceMeters: null as number | null, signature: null as string | null, message: "", checking: false });
 
@@ -69,6 +70,14 @@ export default function StreamDetailPage() {
   const [submittingUnlock, setSubmittingUnlock] = useState(false);
   const [presenceStatus, setPresenceStatus] = useState<{ timeInZoneMs: number; requiredDurationMs: number; remainingMs: number; met: boolean } | null>(null);
   const [stepData, setStepData] = useState<{ id: string; status: string; completedAt: number | null }[] | null>(null);
+
+  async function fetchStreamMeta() {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/stream-meta/${id}`);
+      const data = await res.json();
+      if (data.meta) setStreamMeta(data.meta);
+    } catch (e) { console.error(e); }
+  }
 
   async function fetchUnlockRequest() {
     try {
@@ -134,7 +143,7 @@ export default function StreamDetailPage() {
     } finally { setLoading(false); }
   }, [publicClient, streamId]);
 
-  useEffect(() => { fetchStream(); fetchUnlockRequest(); }, [fetchStream]);
+  useEffect(() => { fetchStream(); fetchUnlockRequest(); fetchStreamMeta(); }, [fetchStream]);
   useEffect(() => { const id = setInterval(() => { fetchStream(); fetchUnlockRequest(); }, 30_000); return () => clearInterval(id); }, [fetchStream]);
 
   useEffect(() => {
@@ -342,7 +351,7 @@ export default function StreamDetailPage() {
         )}
 
         {/* Proof of work submission */}
-        {(isReceiver || isSender) && stream.conditionType === 0 && stream.status === 0 && (
+        {(isReceiver || isSender) && stream.conditionType === 0 && stream.status === 0 && streamMeta?.conditionMode === "proof" && (
           <ProofSubmission
             streamId={id}
             isReceiver={!!isReceiver}
