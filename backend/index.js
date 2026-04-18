@@ -20,7 +20,12 @@ async function redisGet(key) {
       headers: { Authorization: `Bearer ${REDIS_TOKEN}` }
     });
     const data = await res.json();
-    return data.result ? JSON.parse(data.result) : null;
+    if (!data.result) return null;
+    const parsed = JSON.parse(data.result);
+    if (parsed && typeof parsed === "object" && "value" in parsed) {
+      return typeof parsed.value === "string" ? JSON.parse(parsed.value) : parsed.value;
+    }
+    return parsed;
   } catch { return null; }
 }
 
@@ -271,4 +276,132 @@ app.post("/api/stream-meta", (req, res) => {
 app.get("/api/stream-meta/:streamId", (req, res) => {
   const db = readMeta();
   res.json({ meta: db[req.params.streamId] || null });
+});
+
+// ─── Circle API Services ──────────────────────────────────────────────────────
+const walletService = require("./services/walletService");
+const paymentService = require("./services/paymentService");
+const ledgerService = require("./services/ledgerService");
+const { handleCircleWebhook } = require("./services/webhookHandler");
+
+// POST /api/wallet/create
+app.post("/api/wallet/create", async (req, res) => {
+  try {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: "Missing userId" });
+    const wallet = await walletService.getOrCreateWallet(userId, redisGet, redisSet);
+    res.json({ success: true, wallet });
+  } catch (e) {
+    console.error("Wallet create error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/wallet/balance/:address
+app.get("/api/wallet/balance/:address", async (req, res) => {
+  try {
+    const walletRecord = await redisGet(`wallet:${req.params.address.toLowerCase()}`);
+    if (!walletRecord) return res.status(404).json({ error: "Wallet not found" });
+    const balance = await ledgerService.getBalance(req.params.address, redisGet);
+    res.json({ success: true, balance });
+  } catch (e) {
+    console.error("Balance error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/deposit/address/:userId
+app.get("/api/deposit/address/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const walletRecord = await redisGet(`wallet:${userId.toLowerCase()}`);
+    if (!walletRecord) return res.status(404).json({ error: "Wallet not found. Create wallet first." });
+    const walletData = walletRecord.value ? JSON.parse(walletRecord.value) : walletRecord;
+    const depositAddress = await paymentService.getDepositAddress(walletData.id);
+    await redisSet(`depositAddress:${depositAddress.address.toLowerCase()}`, userId.toLowerCase());
+    res.json({ success: true, depositAddress });
+  } catch (e) {
+    console.error("Deposit address error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// GET /api/deposit/status/:transferId
+app.get("/api/deposit/status/:transferId", async (req, res) => {
+  try {
+    const status = await paymentService.getDepositStatus(req.params.transferId);
+    res.json({ success: true, status });
+  } catch (e) {
+    console.error("Deposit status error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/withdraw
+app.post("/api/withdraw", async (req, res) => {
+  try {
+    const { userId, toAddress, amount } = req.body;
+    if (!userId || !toAddress || !amount) return res.status(400).json({ error: "Missing fields" });
+    const walletRecord = await redisGet(`wallet:${userId.toLowerCase()}`);
+    if (!walletRecord) return res.status(404).json({ error: "Wallet not found" });
+    await ledgerService.debit(userId, amount, redisGet, redisSet);
+    const walletData = walletRecord.value ? JSON.parse(walletRecord.value) : walletRecord;
+    const transfer = await paymentService.withdraw(walletData.id, toAddress, amount);
+    res.json({ success: true, transfer });
+  } catch (e) {
+    console.error("Withdraw error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/webhooks/circle
+app.post("/api/webhooks/circle", async (req, res) => {
+  try {
+    const result = await handleCircleWebhook(req.body, redisGet, redisSet);
+    res.json({ success: true, result });
+  } catch (e) {
+    console.error("Webhook error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── Paymaster / Gas Abstraction ──────────────────────────────────────────────
+const paymasterService = require("./services/paymasterService");
+
+// GET /api/paymaster/status — check sponsor wallet balance
+app.get("/api/paymaster/status", async (req, res) => {
+  try {
+    const status = await paymasterService.getSponsorBalance();
+    res.json({ success: true, ...status });
+  } catch (e) {
+    console.error("Paymaster status error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/paymaster/sponsor — sponsor a transaction on behalf of user
+app.post("/api/paymaster/sponsor", async (req, res) => {
+  try {
+    const { to, data, value } = req.body;
+    if (!to || !data) return res.status(400).json({ error: "Missing to or data" });
+    const result = await paymasterService.sponsorTransaction(to, data, value || "0");
+    res.json({ success: true, ...result });
+  } catch (e) {
+    console.error("Sponsor tx error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/paymaster/permit — sign a gasless permit for a user
+app.post("/api/paymaster/permit", async (req, res) => {
+  try {
+    const { userAddress, contractAddress } = req.body;
+    if (!userAddress || !contractAddress) return res.status(400).json({ error: "Missing fields" });
+    const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+    const permit = await paymasterService.signGaslessPermit(userAddress, contractAddress, deadline);
+    res.json({ success: true, ...permit });
+  } catch (e) {
+    console.error("Permit error:", e);
+    res.status(500).json({ error: e.message });
+  }
 });

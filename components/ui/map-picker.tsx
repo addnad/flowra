@@ -30,7 +30,7 @@ function SearchBox({ onPlaceSelect }: { onPlaceSelect: (lat: number, lon: number
       try {
         const res = await fetch(
           `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}&limit=5&addressdetails=1`,
-          { headers: { "Accept-Language": "en", "User-Agent": "Driply/1.0" } }
+          { headers: { "Accept-Language": "en", "User-Agent": "Flowra/1.0" } }
         );
         const data = await res.json();
         setSuggestions(data);

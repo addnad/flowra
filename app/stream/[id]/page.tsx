@@ -10,8 +10,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { MapPin, Clock, Pause, Play, X, CheckCircle2, XCircle, Loader2, ArrowLeft, RefreshCw, Share2, Navigation } from "lucide-react";
 import { formatUsdc, timeRemaining, streamProgress, STATUS_LABELS, STATUS_COLORS } from "@/lib/utils";
-import { DRIPLY_ABI } from "@/lib/abi";
-import { DRIPLY_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
+import { FLOWRA_ABI } from "@/lib/abi";
+import { FLOWRA_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
 import { FlowraLogo } from "@/components/ui/logo";
 import { ProofSubmission } from "@/components/ui/proof-submission";
 import { PresenceTimer } from "@/components/ui/presence-timer";
@@ -111,8 +111,8 @@ export default function StreamDetailPage() {
       await fetch(`${BACKEND_URL}/api/unlock-request/${id}/${action}`, { method: "POST" });
       if (action === "approve" && unlockRequest) {
         writeContract({
-          address: DRIPLY_CONTRACT_ADDRESS,
-          abi: DRIPLY_ABI,
+          address: FLOWRA_CONTRACT_ADDRESS,
+          abi: FLOWRA_ABI,
           functionName: "emergencyUnlock",
           args: [streamId, BigInt(unlockRequest.percentage || 100)],
         });
@@ -130,8 +130,8 @@ export default function StreamDetailPage() {
     if (!publicClient) return;
     try {
       const [rawStream, rawClaimable] = await Promise.all([
-        publicClient.readContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "getStream", args: [streamId] }),
-        publicClient.readContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "claimableAmount", args: [streamId] }),
+        publicClient.readContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "getStream", args: [streamId] }),
+        publicClient.readContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "claimableAmount", args: [streamId] }),
       ]);
       const s = rawStream as any;
       setStream({ id: streamId, sender: s.sender, receiver: s.receiver, totalAmount: s.totalAmount, startTime: s.startTime, endTime: s.endTime, interval: s.interval, amountClaimed: s.amountClaimed, status: Number(s.status), conditionType: Number(s.conditionType), conditionData: s.conditionData });
@@ -189,9 +189,9 @@ export default function StreamDetailPage() {
     if (!stream || !isConnected) return;
     if (stream.conditionType === 1) {
       if (!locationVerif.signature) { toast.error("Verify your location first."); return; }
-      writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "claimFunds", args: [streamId, locationVerif.signature as `0x${string}`] });
+      writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "claimFunds", args: [streamId, locationVerif.signature as `0x${string}`] });
     } else {
-      writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "claimFunds", args: [streamId, "0x"] });
+      writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "claimFunds", args: [streamId, "0x"] });
     }
     toast.info("Flowra is processing your claim…");
   }
@@ -382,16 +382,16 @@ export default function StreamDetailPage() {
               <p className="text-gray-500 text-xs uppercase tracking-wider mb-4">Sender controls</p>
               <div className="flex gap-3">
                 {stream.status === 0 && (
-                  <button onClick={() => { writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "pauseStream", args: [streamId] }); toast.info("Flowra has paused this payment stream."); }} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-medium hover:bg-yellow-500/20 transition-colors disabled:opacity-50">
+                  <button onClick={() => { writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "pauseStream", args: [streamId] }); toast.info("Flowra has paused this payment stream."); }} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-medium hover:bg-yellow-500/20 transition-colors disabled:opacity-50">
                     <Pause className="w-4 h-4" /> Pause
                   </button>
                 )}
                 {stream.status === 1 && (
-                  <button onClick={() => { writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "resumeStream", args: [streamId] }); toast.info("Flowra resumed the payment stream."); }} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium hover:bg-green-500/20 transition-colors disabled:opacity-50">
+                  <button onClick={() => { writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "resumeStream", args: [streamId] }); toast.info("Flowra resumed the payment stream."); }} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-medium hover:bg-green-500/20 transition-colors disabled:opacity-50">
                     <Play className="w-4 h-4" /> Resume
                   </button>
                 )}
-                <button onClick={() => { if (!confirm("Cancel this stream?")) return; writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "cancelStream", args: [streamId] }); toast.info("Flowra is settling this stream…"); }} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50">
+                <button onClick={() => { if (!confirm("Cancel this stream?")) return; writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "cancelStream", args: [streamId] }); toast.info("Flowra is settling this stream…"); }} disabled={isLoading} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors disabled:opacity-50">
                   <X className="w-4 h-4" /> Cancel
                 </button>
               </div>

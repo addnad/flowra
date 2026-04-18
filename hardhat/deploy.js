@@ -17,7 +17,7 @@ console.log("Balance:", ethers.formatUnits(balance, 6), "USDC");
 
 console.log("Compiling...");
 
-const source = readFileSync("contracts/DriplyStreams.sol", "utf8");
+const source = readFileSync("contracts/FlowraStreams.sol", "utf8");
 
 function findImports(path) {
   try {
@@ -29,7 +29,7 @@ function findImports(path) {
 
 const input = {
   language: "Solidity",
-  sources: { "DriplyStreams.sol": { content: source } },
+  sources: { "FlowraStreams.sol": { content: source } },
   settings: {
     viaIR: true,
     optimizer: { enabled: true, runs: 200 },
@@ -48,13 +48,13 @@ if (output.errors) {
   output.errors.filter(e => e.severity === "warning").forEach(w => console.warn("Warning:", w.message));
 }
 
-const contract = output.contracts["DriplyStreams.sol"]["DriplyStreams"];
+const contract = output.contracts["FlowraStreams.sol"]["FlowraStreams"];
 const abi = contract.abi;
 const bytecode = contract.evm.bytecode.object;
 
 mkdirSync("artifacts", { recursive: true });
-writeFileSync("artifacts/DriplyStreams.abi", JSON.stringify(abi));
-writeFileSync("artifacts/DriplyStreams.bin", bytecode);
+writeFileSync("artifacts/FlowraStreams.abi", JSON.stringify(abi));
+writeFileSync("artifacts/FlowraStreams.bin", bytecode);
 
 console.log("Compilation successful!");
 
@@ -65,4 +65,4 @@ const deployed = await factory.deploy(BACKEND_SIGNER);
 await deployed.waitForDeployment();
 
 const address = await deployed.getAddress();
-console.log("✅ DriplyStreams deployed at:", address);
+console.log("✅ FlowraStreams deployed at:", address);

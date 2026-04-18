@@ -1,4 +1,4 @@
-export const DRIPLY_ABI = [
+export const FLOWRA_ABI = [
   {
     name: "createStream",
     type: "function",

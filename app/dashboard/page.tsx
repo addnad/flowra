@@ -10,10 +10,11 @@ import {
   ArrowUpRight, ArrowDownLeft,
   Pause, Play, X, RefreshCw, PlusCircle, MapPin, Clock, Share2,
 } from "lucide-react";
-import { FlowraLogo } from "@/components/ui/logo";
+import { FlowraLogo } from "@/components/ui/logo"
+import CircleWalletPanel from "@/components/CircleWalletPanel";
 import { formatUsdc, timeRemaining, streamProgress, STATUS_LABELS, STATUS_COLORS } from "@/lib/utils";
-import { DRIPLY_ABI } from "@/lib/abi";
-import { DRIPLY_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
+import { FLOWRA_ABI } from "@/lib/abi";
+import { FLOWRA_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
 
 interface StreamData {
   id: bigint;
@@ -131,16 +132,16 @@ function StreamCard({ stream, onAction }: { stream: StreamData; onAction: () => 
           )}
           {isSender && stream.status === 0 && (
             <>
-              <button onClick={() => { writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "pauseStream", args: [stream.id] }); toast.info("Flowra has paused this payment stream."); }} disabled={isLoading} className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors disabled:opacity-50">
+              <button onClick={() => { writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "pauseStream", args: [stream.id] }); toast.info("Flowra has paused this payment stream."); }} disabled={isLoading} className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/20 transition-colors disabled:opacity-50">
                 <Pause className="w-3 h-3" /> Pause
               </button>
-              <button onClick={() => { if (!confirm("Cancel this stream?")) return; writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "cancelStream", args: [stream.id] }); toast.info("Flowra is settling this stream…"); }} disabled={isLoading} className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50">
+              <button onClick={() => { if (!confirm("Cancel this stream?")) return; writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "cancelStream", args: [stream.id] }); toast.info("Flowra is settling this stream…"); }} disabled={isLoading} className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 transition-colors disabled:opacity-50">
                 <X className="w-3 h-3" /> Cancel
               </button>
             </>
           )}
           {isSender && stream.status === 1 && (
-            <button onClick={() => { writeContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "resumeStream", args: [stream.id] }); toast.info("Flowra resumed the payment stream."); }} disabled={isLoading} className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-colors disabled:opacity-50">
+            <button onClick={() => { writeContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "resumeStream", args: [stream.id] }); toast.info("Flowra resumed the payment stream."); }} disabled={isLoading} className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-lg bg-green-500/10 text-green-400 border border-green-500/20 hover:bg-green-500/20 transition-colors disabled:opacity-50">
               <Play className="w-3 h-3" /> Resume
             </button>
           )}
@@ -187,8 +188,8 @@ export default function DashboardPage() {
       const enriched = await Promise.all(streamIds.map(async (idStr) => {
         const streamId = BigInt(idStr);
         const [rawStream, claimable] = await Promise.all([
-          publicClient.readContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "getStream", args: [streamId] }),
-          publicClient.readContract({ address: DRIPLY_CONTRACT_ADDRESS, abi: DRIPLY_ABI, functionName: "claimableAmount", args: [streamId] }),
+          publicClient.readContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "getStream", args: [streamId] }),
+          publicClient.readContract({ address: FLOWRA_CONTRACT_ADDRESS, abi: FLOWRA_ABI, functionName: "claimableAmount", args: [streamId] }),
         ]);
         const s = rawStream as any;
         if (s.sender === "0x0000000000000000000000000000000000000000") return null;
@@ -282,6 +283,10 @@ export default function DashboardPage() {
             <p className="relative text-gray-400 text-xs mb-2">Active streams</p>
             <p className="relative text-green-400 text-2xl font-bold">{streams.filter(s => s.status === 0).length}</p>
           </div>
+        </div>
+
+        <div className="mb-8">
+          <CircleWalletPanel />
         </div>
 
         <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 mb-6 w-fit">

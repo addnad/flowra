@@ -6,8 +6,8 @@ import { Navbar } from "@/components/ui/navbar";
 import { FlowraLogo } from "@/components/ui/logo";
 import { RefreshCw, TrendingUp, Droplets, Users, Zap } from "lucide-react";
 import { formatUsdc } from "@/lib/utils";
-import { DRIPLY_ABI } from "@/lib/abi";
-import { DRIPLY_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
+import { FLOWRA_ABI } from "@/lib/abi";
+import { FLOWRA_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
 
 export default function AnalyticsPage() {
   const { address, isConnected } = useAccount();
@@ -44,8 +44,8 @@ export default function AnalyticsPage() {
       await Promise.all(unique.map(async (log) => {
         const streamId = log.args?.streamId as bigint;
         const rawStream = await publicClient.readContract({
-          address: DRIPLY_CONTRACT_ADDRESS,
-          abi: DRIPLY_ABI,
+          address: FLOWRA_CONTRACT_ADDRESS,
+          abi: FLOWRA_ABI,
           functionName: "getStream",
           args: [streamId],
         });

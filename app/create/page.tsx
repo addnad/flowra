@@ -7,8 +7,8 @@ import { Navbar } from "@/components/ui/navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Droplets, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
 import { parseUsdc, encodeLocationCondition, INTERVAL_PRESETS, DURATION_PRESETS } from "@/lib/utils";
-import { DRIPLY_ABI, ERC20_ABI } from "@/lib/abi";
-import { DRIPLY_CONTRACT_ADDRESS, USDC_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
+import { FLOWRA_ABI, ERC20_ABI } from "@/lib/abi";
+import { FLOWRA_CONTRACT_ADDRESS, USDC_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
 import { ConditionSelector, type ConditionMode } from "@/components/ui/condition-selector";
 
 function Label({ children }: { children: React.ReactNode }) {
@@ -73,7 +73,7 @@ export default function CreateStreamPage() {
       if (!address || !publicClient || rawAmount === 0n) return;
       setCheckingAllowance(true);
       try {
-        const result = await publicClient.readContract({ address: USDC_ADDRESS, abi: ERC20_ABI, functionName: "allowance", args: [address, DRIPLY_CONTRACT_ADDRESS] });
+        const result = await publicClient.readContract({ address: USDC_ADDRESS, abi: ERC20_ABI, functionName: "allowance", args: [address, FLOWRA_CONTRACT_ADDRESS] });
         setStep((result as bigint) >= rawAmount ? "create" : "approve");
       } catch (e) { console.error(e); }
       finally { setCheckingAllowance(false); }
@@ -125,7 +125,7 @@ export default function CreateStreamPage() {
 
   function handleApprove() {
     if (!isConnected) { toast.error("Connect your wallet first"); return; }
-    writeContract({ address: USDC_ADDRESS, abi: ERC20_ABI, functionName: "approve", args: [DRIPLY_CONTRACT_ADDRESS, rawAmount] });
+    writeContract({ address: USDC_ADDRESS, abi: ERC20_ABI, functionName: "approve", args: [FLOWRA_CONTRACT_ADDRESS, rawAmount] });
     toast.info("Approving USDC…");
   }
 
@@ -152,8 +152,8 @@ export default function CreateStreamPage() {
     }
 
     writeContract({
-      address: DRIPLY_CONTRACT_ADDRESS,
-      abi: DRIPLY_ABI,
+      address: FLOWRA_CONTRACT_ADDRESS,
+      abi: FLOWRA_ABI,
       functionName: "createStream",
       args: [receiver as `0x${string}`, USDC_ADDRESS, rawAmount, BigInt(duration), BigInt(interval), conditionType, conditionData],
     });

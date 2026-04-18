@@ -1,17 +1,20 @@
 {
-  "name": "driply-backend",
+  "name": "flowra-backend",
   "version": "1.0.0",
-  "description": "Driply location verification API",
+  "description": "Flowra location verification API",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
   "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.3.0",
+    "axios": "^1.15.0",
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "ethers": "^6.13.2",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
