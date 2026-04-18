@@ -9,3 +9,5 @@ build/
 hardhat/artifacts/
 hardhat/node_modules/
 .vercel
+backend/node_modules
+node_modules
