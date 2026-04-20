@@ -106,7 +106,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-white">Everything you need</h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto">One contract. Infinite payment possibilities.</p>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">One Agent. Infinite payment possibilities.</p>
           </div>
           <BentoGrid className="lg:grid-rows-3 lg:grid-cols-3">
             <BentoCard name="Location-Gated Streams" className="lg:row-start-1 lg:row-end-4 lg:col-start-2 lg:col-end-3" background={
