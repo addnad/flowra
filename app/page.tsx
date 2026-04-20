@@ -7,7 +7,7 @@ import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
 import { Navbar } from "@/components/ui/navbar";
 import {
   CheckCircle, ArrowRight, Clock,
-  MapPin, Shield, Zap, Users, Pause, Twitter, Github, AlertTriangle,
+  MapPin, Shield, Zap, Users, Pause, Github, AlertTriangle,
 } from "lucide-react";
 import { FlowraLogo } from "@/components/ui/logo";
 
@@ -260,7 +260,7 @@ export default function HomePage() {
                 ERC-8004 Agent #1492 on Arc Network
               </a>
             <div className="flex gap-4">
-              <a href="https://x.com/1st_bernice" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><Twitter className="h-4 w-4" /></a>
+              <a href="https://x.com/agentflowra" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
               <a href="https://github.com/addnad/flowra" target="_blank" rel="noopener noreferrer" className="p-2 bg-white/5 border border-white/10 rounded-lg text-gray-400 hover:text-white transition-colors"><Github className="h-4 w-4" /></a>
             </div>
           </div>

@@ -10,8 +10,7 @@ import {
   ArrowUpRight, ArrowDownLeft,
   Pause, Play, X, RefreshCw, PlusCircle, MapPin, Clock, Share2,
 } from "lucide-react";
-import { FlowraLogo } from "@/components/ui/logo"
-import CircleWalletPanel from "@/components/CircleWalletPanel";
+import { FlowraLogo } from "@/components/ui/logo";
 import { formatUsdc, timeRemaining, streamProgress, STATUS_LABELS, STATUS_COLORS } from "@/lib/utils";
 import { FLOWRA_ABI } from "@/lib/abi";
 import { FLOWRA_CONTRACT_ADDRESS, BACKEND_URL } from "@/lib/wagmi";
@@ -283,10 +282,6 @@ export default function DashboardPage() {
             <p className="relative text-gray-400 text-xs mb-2">Active streams</p>
             <p className="relative text-green-400 text-2xl font-bold">{streams.filter(s => s.status === 0).length}</p>
           </div>
-        </div>
-
-        <div className="mb-8">
-          <CircleWalletPanel />
         </div>
 
         <div className="flex gap-1 bg-white/5 border border-white/10 rounded-xl p-1 mb-6 w-fit">
